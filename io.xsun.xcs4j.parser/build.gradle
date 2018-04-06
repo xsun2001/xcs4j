@@ -1,0 +1,9 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.12'
+}
+
+ext.moduleName = 'io.xsun.xcs4j.parser'

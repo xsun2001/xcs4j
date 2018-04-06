@@ -1,1 +1,3 @@
 rootProject.name = 'xcs4j'
+
+include("io.xsun.xcs4j.parser")
