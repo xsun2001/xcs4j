@@ -3,6 +3,8 @@ plugins {
 }
 
 dependencies {
+    implementation project(':io.xsun.xcs4j.base')
+
     testImplementation 'junit:junit:4.12'
 }
 
