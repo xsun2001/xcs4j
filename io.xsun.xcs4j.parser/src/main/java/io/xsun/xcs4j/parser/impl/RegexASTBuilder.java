@@ -99,6 +99,9 @@ public class RegexASTBuilder {
                 temp = temp == RegexASTNode.EMPTY_NODE ? node : new RegexASTNode(RegexASTNode.NodeType.CAT, temp, node);
             }
         }
+        if (temp != RegexASTNode.EMPTY_NODE) {
+            newList.add(temp);
+        }
         LOG.debug("Finishing building CAT nodes");
         return newList;
     }
@@ -110,7 +113,7 @@ public class RegexASTBuilder {
         while (iterator.hasNext()) {
             var node = iterator.next();
             if (result == RegexASTNode.EMPTY_NODE) {
-                if (checkOrNodeIsEmpty(node)) {
+                if (node.getType() == RegexASTNode.NodeType.OR && checkOrNodeIsEmpty(node)) {
                     //Previous node is empty, current OR node has no left child
                     throw new IllegalStateException();
                 }
