@@ -29,10 +29,13 @@ public class RegexASTNode {
         final StringBuilder sb = new StringBuilder("Node{");
         sb.append("type=").append(type);
         if (type == NodeType.CHAR) {
-            sb.append(", value=").append(value);
+            sb.append(", value=").append(value).append('}');
+        } else if (type == NodeType.STAR) {
+            sb.append(", child=").append(left);
+        } else if (type != NodeType.EMPTY) {
+            sb.append(", left=").append(left);
+            sb.append(", right=").append(right);
         }
-        sb.append(", left=").append(left);
-        sb.append(", right=").append(right);
         sb.append('}');
         return sb.toString();
     }
@@ -49,7 +52,6 @@ public class RegexASTNode {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(type, left, right);
     }
 
