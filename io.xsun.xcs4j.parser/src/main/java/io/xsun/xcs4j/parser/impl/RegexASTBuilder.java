@@ -1,6 +1,5 @@
 package io.xsun.xcs4j.parser.impl;
 
-import io.xsun.xcs4j.parser.ParserException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -29,11 +28,7 @@ public class RegexASTBuilder {
     private RegexASTNode buildAST(int start, int end) {
         LOG.debug("Building the AST of regex[%s] in range [%d, %d]", start, end);
         Objects.checkFromIndexSize(start, end, length);
-        var nodeList = buildNodeList(start, end);
-        nodeList = buildConcatenation(nodeList);
-
-        //TODO: finish AST work
-        return null;
+        return buildOr(buildConcatenation(buildNodeList(start, end)));
     }
 
     private int findingRightParenthesis(int left) {
@@ -49,7 +44,7 @@ public class RegexASTBuilder {
             }
         }
         LOG.error("Cannot find matching parenthesis. The regex may have a syntax mistake.");
-        throw new ParserException("No matching parenthesis");
+        throw new IllegalStateException("No matching parenthesis");
     }
 
     private List<RegexASTNode> buildNodeList(int start, int end) {
@@ -104,7 +99,52 @@ public class RegexASTBuilder {
                 temp = temp == RegexASTNode.EMPTY_NODE ? node : new RegexASTNode(RegexASTNode.NodeType.CAT, temp, node);
             }
         }
+        LOG.debug("finishing building CAT nodes");
         return newList;
     }
 
+    private RegexASTNode buildOr(List<RegexASTNode> nodeList) {
+        LOG.debug("building OR nodes");
+        var result = RegexASTNode.EMPTY_NODE;
+        var iterator = nodeList.iterator();
+        while (iterator.hasNext()) {
+            var node = iterator.next();
+            if (result == RegexASTNode.EMPTY_NODE) {
+                if (checkOrNodeIsEmpty(node)) {
+                    //Previous node is empty, current OR node has no left child
+                    throw new IllegalStateException();
+                }
+                result = node;
+            } else {
+                if (node.getType() == RegexASTNode.NodeType.OR && checkOrNodeIsEmpty(node)) {
+                    result = new RegexASTNode(RegexASTNode.NodeType.OR, result, iterator.next());
+                } else {
+                    //Two nodes whose type is node OR cannot be right next to each other
+                    throw new IllegalStateException();
+                }
+            }
+        }
+        if (result.getType() == RegexASTNode.NodeType.OR) {
+            checkOrNodeIsEmpty(result);
+        }
+        return result;
+    }
+
+    /**
+     * Check if the given OR node is empty
+     *
+     * @param node the node to check
+     * @return true if <code>node</code> is empty, or it has no child
+     * @throws IllegalArgumentException If <code>code</code> isn't a OR node or is a OR node with only one child node
+     */
+    private boolean checkOrNodeIsEmpty(RegexASTNode node) {
+        LOG.debug("Checking if [%s] is empty", node.toString());
+        Objects.requireNonNull(node);
+        if (node.getType() == RegexASTNode.NodeType.OR) {
+            if (node.getLeft() == null && node.getRight() == null) return true;
+            if (node.getLeft() != null && node.getRight() != null) return false;
+        }
+        LOG.error("Check failed. [%s] is ", node.toString());
+        throw new IllegalArgumentException();
+    }
 }
