@@ -27,7 +27,7 @@ public class RegexASTBuilder {
 
     private RegexASTNode buildAST(int start, int end) {
         LOG.debug("Building the AST of regex[{}] in range [{}, {}]", regex, start, end);
-        Objects.checkFromIndexSize(start, end, length);
+        Objects.checkFromToIndex(start, end, length);
         return buildOr(buildConcatenation(buildNodeList(start, end)));
     }
 
@@ -58,7 +58,7 @@ public class RegexASTBuilder {
                 LOG.debug("Found left parenthesis in position {}", i);
                 int right = findingRightParenthesis(i);
                 nodeList.add(buildAST(i + 1, right));
-                i = right + 1;
+                i = right;
             } else if (c == '*') {
                 LOG.debug("Found '*' in position {}", i);
                 var node = nodeList.remove(nodeList.size() - 1);
