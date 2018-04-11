@@ -21,25 +21,25 @@ public class RegexASTBuilder {
     }
 
     public final RegexASTNode buildAST() {
-        LOG.info("Build the AST of regex [%s]", regex);
+        LOG.info("Build the AST of regex [{}]", regex);
         return buildAST(0, length);
     }
 
     private RegexASTNode buildAST(int start, int end) {
-        LOG.debug("Building the AST of regex[%s] in range [%d, %d]", start, end);
+        LOG.debug("Building the AST of regex[{}] in range [{}, {}]", regex, start, end);
         Objects.checkFromIndexSize(start, end, length);
         return buildOr(buildConcatenation(buildNodeList(start, end)));
     }
 
     private int findingRightParenthesis(int left) {
-        LOG.debug("Finding matching right parenthesis in regex [%s] for position [%d]", regex, left);
+        LOG.debug("Finding matching right parenthesis in regex [{}] for position {}", regex, left);
         Objects.checkIndex(left, length);
         int leftParenthesis = 0;
         for (int i = left; i < length; i++) {
             if (regex.charAt(i) == '(') ++leftParenthesis;
             if (regex.charAt(i) == ')') --leftParenthesis;
             if (leftParenthesis == 0) {
-                LOG.debug("Found matching right parenthesis in position [%d]", i);
+                LOG.debug("Found matching right parenthesis in position {}", i);
                 return i;
             }
         }
@@ -48,30 +48,30 @@ public class RegexASTBuilder {
     }
 
     private List<RegexASTNode> buildNodeList(int start, int end) {
-        LOG.debug("Building nodes list of regex [%s] in range [%d, %d]", regex, start, end);
+        LOG.debug("Building nodes list of regex [{}] in range [{}, {}]", regex, start, end);
         //TODO: more error check
         var nodeList = new ArrayList<RegexASTNode>();
         Objects.checkFromToIndex(start, end, length);
         for (int i = start; i < end; i++) {
             char c = regex.charAt(i);
             if (c == '(') {
-                LOG.debug("Found left parenthesis in position [%d]", i);
+                LOG.debug("Found left parenthesis in position {}", i);
                 int right = findingRightParenthesis(i);
                 nodeList.add(buildAST(i + 1, right));
                 i = right + 1;
             } else if (c == '*') {
-                LOG.debug("Found '*' in position [%d]", i);
+                LOG.debug("Found '*' in position {}", i);
                 var node = nodeList.remove(nodeList.size() - 1);
                 nodeList.add(new RegexASTNode(RegexASTNode.NodeType.STAR, node, null));
             } else if (c == '|') {
-                LOG.debug("Found '|' in position [%d]", i);
+                LOG.debug("Found '|' in position {}", i);
                 nodeList.add(new RegexASTNode(RegexASTNode.NodeType.OR));
             } else {
-                LOG.debug("Found normal char [%c] in position [%d]", c, i);
+                LOG.debug("Found normal char '{}' in position {}", c, i);
                 nodeList.add(new RegexASTNode(c));
             }
         }
-        LOG.debug("Finished building nodes list of regex [%s]", regex);
+        LOG.debug("Finished building nodes list of regex [{}]", regex);
         return nodeList;
     }
 
@@ -95,16 +95,16 @@ public class RegexASTBuilder {
                     temp = temp == RegexASTNode.EMPTY_NODE ? node : new RegexASTNode(RegexASTNode.NodeType.CAT, temp, node);
                 }
             } else {
-                LOG.debug("Meet a [%s] node. It will be concatenated", nodeType.toString());
+                LOG.debug("Meet a {} node. It will be concatenated", nodeType.toString());
                 temp = temp == RegexASTNode.EMPTY_NODE ? node : new RegexASTNode(RegexASTNode.NodeType.CAT, temp, node);
             }
         }
-        LOG.debug("finishing building CAT nodes");
+        LOG.debug("Finishing building CAT nodes");
         return newList;
     }
 
     private RegexASTNode buildOr(List<RegexASTNode> nodeList) {
-        LOG.debug("building OR nodes");
+        LOG.debug("Building OR nodes");
         var result = RegexASTNode.EMPTY_NODE;
         var iterator = nodeList.iterator();
         while (iterator.hasNext()) {
@@ -127,6 +127,7 @@ public class RegexASTBuilder {
         if (result.getType() == RegexASTNode.NodeType.OR) {
             checkOrNodeIsEmpty(result);
         }
+        LOG.debug("Finish building OR nodes");
         return result;
     }
 
@@ -138,13 +139,13 @@ public class RegexASTBuilder {
      * @throws IllegalArgumentException If <code>code</code> isn't a OR node or is a OR node with only one child node
      */
     private boolean checkOrNodeIsEmpty(RegexASTNode node) {
-        LOG.debug("Checking if [%s] is empty", node.toString());
+        LOG.debug("Checking if [{}] is empty", node);
         Objects.requireNonNull(node);
         if (node.getType() == RegexASTNode.NodeType.OR) {
             if (node.getLeft() == null && node.getRight() == null) return true;
             if (node.getLeft() != null && node.getRight() != null) return false;
         }
-        LOG.error("Check failed. [%s] is ", node.toString());
+        LOG.error("Check failed. [{}] is ", node);
         throw new IllegalArgumentException();
     }
 }
